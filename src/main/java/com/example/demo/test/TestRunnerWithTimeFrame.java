@@ -25,12 +25,20 @@ import java.util.HashMap;
         CalculatorTestSuite2.class
 })
 public class TestRunnerWithTimeFrame {
-    private static final String testDir = "src/main";
-    private static final String FILE_PREFIX = testDir+"/java/";
+    private static final String TEST_DIR = "src/main/";
+    private static final String FILE_PREFIX = TEST_DIR + "java/";
     private static HashMap<String, String> fullClassName = new HashMap<>();
 
     public static long startTime, endTime;
     public static void timeFrameSetup(String timeFrame) {
+        /**
+         * Setting the startTime and endTime according to the given timeFrame
+         * LastWeek : Last Monday to Last Sunday
+         * ThisWeek : This Monday to Now
+         * LastSevenDays : 7 Days before today to Today
+         * ThisMonth : First Day of Month to Now
+         */
+
         switch (timeFrame) {
             case "LastWeek": {
                 LocalDate localDate = LocalDate.now();
@@ -51,10 +59,11 @@ public class TestRunnerWithTimeFrame {
                 endTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
                 break;
             }
-            case "LastSevenDays":
+            case "LastSevenDays": {
                 startTime = new DateTime().withTimeAtStartOfDay().minusDays(6).getMillis() / 1000;
                 endTime = new DateTime().getMillis() / 1000;
                 break;
+            }
             case "ThisMonth": {
                 LocalDate localDate = LocalDate.now();
                 LocalDateTime time = localDate.atStartOfDay().with(TemporalAdjusters.firstDayOfMonth());
@@ -70,23 +79,24 @@ public class TestRunnerWithTimeFrame {
     }
 
     public static HashMap<String,String> getAuthorMap() throws ClassNotFoundException, IOException {
+
         Class currentClass = new Object(){}.getClass().getEnclosingClass(); // TestRunnerWithTimeFrame.class
-        //Result result = JUnitCore.runClasses(currentClass);
 
         HashMap<String,String > authorMap = new HashMap<>(); // map for @Test method() --> AuthorName
-        fullClassName = new HashMap<>(); // map for class.simpleName to class.fullName
+        fullClassName = new HashMap<>(); // map for class.simpleName to class.fullName (class name with package)
+
         Suite.SuiteClasses testSuiteClasses = (Suite.SuiteClasses) currentClass.getAnnotation(Suite.SuiteClasses.class);
         Class<?>[] allTestSuitesClasses = testSuiteClasses.value();
-        ArrayList<String> testSuites = new ArrayList<>();
+
+        ArrayList<String> testSuites = new ArrayList<>(); // Extracting All TestSuite classes in the @SuiteClasses annotations with this class
         for(Class suiteName: allTestSuitesClasses){
-            //System.out.println(suiteName.getPackageName());
             testSuites.add(suiteName.getName());
         }
 
         for(String testSuite: testSuites) {
             Suite.SuiteClasses suiteClasses = Class.forName(testSuite).getAnnotation(Suite.SuiteClasses.class);
 
-            Class<?>[] classesInSuite = suiteClasses.value();
+            Class<?>[] classesInSuite = suiteClasses.value(); // Extracting all test classes in the @SuiteClasses annotations of respective testSuite classes
 
             for (Class className : classesInSuite) {
 
@@ -98,39 +108,41 @@ public class TestRunnerWithTimeFrame {
                     BufferedReader buf = new BufferedReader(new FileReader(fileName));
                     LineNumberReader rdr = new LineNumberReader(buf);
 
-                    long fileTimeStamp = getFileTimeStamp(fileName);
-                    if( fileTimeStamp < startTime) continue;
+                    long fileTimeStamp = getFileTimeStamp(fileName); // get last commit time of the File
+                    if( fileTimeStamp < startTime) continue; // skip this file
                     try {
                         String line;
                         while ((line = rdr.readLine()) != null) {
 
+                            /**
+                             *  We have to map all the @Test methods to its author.
+                             *  So we are reading the file line by line and Whenever we get @Test annotation, We know that our test name will be in the next line.
+                             *  So we are extracting the author of that line from the Git Metadata of the file via git blame command.
+                             */
                             if (line.contains("@Test")) {
                                 line = rdr.readLine(); // this line contains the method name
-                                String gitBlameForLine = findGitBlameForLine(fileName, rdr.getLineNumber());
+                                String gitBlameForLine = findGitBlameForLine(fileName, rdr.getLineNumber()); // returns the <author_name> <last_committed_time>
 
                                 if(gitBlameForLine.split(" ").length<=1) continue;
-                                String authorMailString = gitBlameForLine.split(" ")[0];
+
+                                String authorName = gitBlameForLine.split(" ")[0];
                                 long lastCommitTime = Integer.parseInt(gitBlameForLine.split(" ")[1]);
 
-                                if(lastCommitTime < startTime || lastCommitTime > endTime) continue;
-                                //if(!(authorMailString.contains("@"))) System.out.println("# Not Committed yet");
-                                String authorName = authorMailString;//getAuthorMailFromGitBlame(authorMailString);
+                                if(lastCommitTime < startTime || lastCommitTime > endTime) continue; // There is no change in this file during the Given TimeFrame
+
                                 String methodName = getMethodName(line);
                                 authorMap.put(className.getSimpleName() + ". " + methodName, authorName); // ". " added explicitly
 
-                                //System.out.println(authorName+"\n"+methodName);
-                                //Mapping testname (MongoPersistentPropertyCacheTest. testMongoPersistentPropertyCache_index_created)
-                                // to AuthorName.
+                                //Mapping test_name (MongoPersistentPropertyCacheTest. testMongoPersistentPropertyCache_index_created) to author_name
                             }
                         }
-                    } catch (IOException ee) {
-                        ee.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                     finally {
                         buf.close();
                         rdr.close();
                     }
-                    //pr.waitFor(5, TimeUnit.SECONDS);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -142,7 +154,7 @@ public class TestRunnerWithTimeFrame {
     }
 
     public static HashMap<String,String> getFullClassName(){
-        return fullClassName;
+        return fullClassName;   // Returns the map which contains the package name of the classes
     }
 
 
@@ -164,16 +176,15 @@ public class TestRunnerWithTimeFrame {
             InputStream is = pr.getInputStream();
             BufferedReader buf = new BufferedReader(new InputStreamReader(is));
 
-            try {
-                fileTimeStamp = Integer.parseInt(buf.readLine());
-
-            } finally {
-                is.close();
-                buf.close();
+            String line = buf.readLine();
+            if(line != null){
+                fileTimeStamp = Integer.parseInt(line);
             }
 
-            //pr.waitFor(5, TimeUnit.SECONDS);
-        } catch (Throwable throwable) {
+            is.close();
+            buf.close();
+        }
+        catch (Throwable throwable) {
             System.out.println("Exception while running git log for " + fileName);
             throwable.printStackTrace();
         }
@@ -195,13 +206,12 @@ public class TestRunnerWithTimeFrame {
             pr = Runtime.getRuntime().exec(blameCmd);
             BufferedReader buf  = new BufferedReader(new InputStreamReader(pr.getInputStream()));
 
-            while((line = buf.readLine())!=null){  // reading the result of git blame command
+            if( (line = buf.readLine()) != null){  // reading the result of git blame command
                 String commit = buf.readLine();
                 if(commit == null) return "NIL";
                 String authorMail = getAuthorMailFromGitBlame(line);
                 long committerTime = Integer.parseInt(commit.split(" ")[1]);
-                ret+=authorMail+" "+committerTime;
-                break;
+                ret = authorMail+" "+committerTime;
             }
             buf.close();
         }
@@ -215,8 +225,10 @@ public class TestRunnerWithTimeFrame {
     }
 
     private static String getAuthorMailFromGitBlame(String line){
-        // line as "author_mail <laxman.goliya@sprinklr.com>"
-        // we have to extract laxman.goliya from it.
+        /**
+         * line as "author_mail <laxman.goliya@sprinklr.com>"
+         * we have to extract laxman.goliya from it.
+        */
 
         StringBuilder builder1 = new StringBuilder(line);
         if(builder1.indexOf("@") != -1) {
@@ -226,6 +238,7 @@ public class TestRunnerWithTimeFrame {
 
         return builder1.toString(); // laxman.goliya
     }
+
     private static String getMethodName(String line){
         // line is a method definition line ex. public String fun1(){
         // remove line after (
