@@ -19,12 +19,13 @@ import java.util.HashMap;
         CalculatorTestSuite2.class
 })
 public class TestRunner {
-    private static final String testDir = "src/main";
-    private static final String FILE_PREFIX = testDir+"/java/";
+    private static final String TEST_DIR = "src/main/";
+    private static final String FILE_PREFIX = TEST_DIR + "java/";
+
     private static HashMap<String, String> fullClassName = new HashMap<>();
+
     public static HashMap<String,String> getAuthorMap() throws ClassNotFoundException, IOException {
         Class currentClass = new Object(){}.getClass().getEnclosingClass(); // TestRunner.class
-        //Result result = JUnitCore.runClasses(currentClass);
 
         HashMap<String,String > authorMap = new HashMap<>(); // map for @Test method() --> AuthorName
         fullClassName = new HashMap<>(); // map for class.simpleName to class.fullName
@@ -122,8 +123,10 @@ public class TestRunner {
     }
 
     private static String getAuthorMailFromGitBlame(String line){
-        // line as "author_mail <laxman.goliya@sprinklr.com>"
-        // we have to extract laxman.goliya from it.
+        /**
+         * line as "author_mail <laxman.goliya@sprinklr.com>"
+         * we have to extract laxman.goliya from it.
+         */
 
         StringBuilder builder1 = new StringBuilder(line);
         if(builder1.indexOf("@") != -1) {

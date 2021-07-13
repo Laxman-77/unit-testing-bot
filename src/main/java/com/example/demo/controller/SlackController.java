@@ -14,8 +14,8 @@ import java.util.Set;
 
 @RestController
 public class SlackController {
-    private static final Set<String> allowedChannels = Set.of("unit-test-bot","paid-backend","random");
-    private static final Set<String> allowedDomains = Set.of("unit-test-bot","sprinklr");
+    private static final Set<String> ALLOWED_CHANNELS = Set.of("unit-test-bot","paid-backend","random");
+    private static final Set<String> ALLOWED_DOMAINS = Set.of("unit-test-bot","sprinklr");
 
     @RequestMapping(value = "/getAllFailures",
             method = RequestMethod.POST,
@@ -32,19 +32,16 @@ public class SlackController {
                                                  @RequestParam("response_url") String responseUrl) throws IOException, ClassNotFoundException
     {
 
-        if(!allowedDomains.contains(teamDomain)) return new SlackResponse("Your teamDomain is not authorized to use this bot.");
-        if(!allowedChannels.contains(channelName)) return new SlackResponse("This channel is not authorized to use this bot.");
+        if(!ALLOWED_DOMAINS.contains(teamDomain)) return new SlackResponse("Your teamDomain is not authorized to use this bot.");
+        if(!ALLOWED_CHANNELS.contains(channelName)) return new SlackResponse("This channel is not authorized to use this bot.");
         try {
-            SlackResponse response = RequestHandler.getAllFailures();
+            SlackResponse response = RequestHandler.getAllFailures(responseUrl,text);
             return response;
         }
         catch(Exception e){
             e.printStackTrace();
-            SlackResponse response = new SlackResponse();
-            response.setResponseType("ephemeral");
-            response.setText("Error occurred in execution");
 
-            return response;
+            return new SlackResponse().setText("Sorry to say but some exception occurred.");
         }
     }
 
@@ -63,19 +60,15 @@ public class SlackController {
                                                @RequestParam("response_url") String responseUrl) throws IOException, ClassNotFoundException
     {
 
-        if(!allowedDomains.contains(teamDomain)) return new SlackResponse("Your teamDomain is not authorized to use this bot.");
-        if(!allowedChannels.contains(channelName)) return new SlackResponse("This channel is not authorized to use this bot.");
+        if(!ALLOWED_DOMAINS.contains(teamDomain)) return new SlackResponse("Your teamDomain is not authorized to use this bot.");
+        if(!ALLOWED_CHANNELS.contains(channelName)) return new SlackResponse("This channel is not authorized to use this bot.");
         try {
             SlackResponse response = RequestHandler.getFailuresByAuthor(text);
             return response;
         }
         catch(Exception e){
             e.printStackTrace();
-            SlackResponse response = new SlackResponse();
-            response.setResponseType("ephemeral");
-            response.setText("Error occurred in execution");
-
-            return response;
+            return new SlackResponse().setText("Sorry to say but some exception occurred.");
         }
     }
 
@@ -96,22 +89,24 @@ public class SlackController {
     {
 
         System.out.println(command + " " + text);
-        if(!allowedDomains.contains(teamDomain)) return new SlackResponse("Your teamDomain is not authorized to use this bot.");
-        if(!allowedChannels.contains(channelName)) return new SlackResponse("This channel is not authorized to use this bot.");
+        System.out.println(responseUrl);
+        System.out.println(token);
+        System.out.println(teamId);
+        System.out.println(channelId);
+        System.out.println(userId);
+        if(!ALLOWED_DOMAINS.contains(teamDomain)) return new SlackResponse("Your teamDomain is not authorized to use this bot.");
+        if(!ALLOWED_CHANNELS.contains(channelName)) return new SlackResponse("This channel is not authorized to use this bot.");
         try {
-            SlackResponse response = RequestHandler.getTestAddedByAuthorInTimeframe(text);
+            SlackResponse response = RequestHandler.getTestAddedByAuthorInTimeframe(responseUrl,text);
+
             return response;
         }
         catch(Exception e){
             e.printStackTrace();
-            SlackResponse response = new SlackResponse();
-            response.setResponseType("ephemeral");
-            response.setText("Error occurred in execution");
-
-            return response;
+            return new SlackResponse().setText("Sorry to say but some exception occurred.");
         }
-    }
 
+    }
 
 
     @RequestMapping("/")

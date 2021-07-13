@@ -4,34 +4,74 @@ package com.example.demo.services;
 import com.example.demo.components.SlackResponse;
 import com.example.demo.test.TestRunner;
 import com.example.demo.test.TestRunnerWithTimeFrame;
+import net.minidev.json.JSONObject;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
+import java.io.OutputStream;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class RequestHandler {
-    public static SlackResponse getAllFailures() throws IOException, ClassNotFoundException {
-        SlackResponse response = new SlackResponse();
-        response.setResponseType("in_channel");
+    public static SlackResponse getAllFailures(String responseUrl,String text) throws IOException, ClassNotFoundException {
+        String[] temp = text.split(" ");
+        if(temp.length!=1){
+            return new SlackResponse()
+                    .setResponseType("ephemeral")
+                    .setText("Invalid Command. \n there should be a Build Number after the command.");
+        }
 
-        HashMap<String,String> authorMap = TestRunner.getAuthorMap();
-        String mapTable = MapUtils.getMapAsTableString(authorMap);
+        int buildNr = Integer.parseInt(text);
 
-        ArrayList<String> failureList = new ArrayList<>(); // jenkins report list
-        failureList.add("CalculatorTest1. addTest2");
-        failureList.add("CalculatorTest2. subtractTest1");
-        failureList.add("CalculatorTest2. addTest");
+        Thread thread = new Thread(()-> {
+            try {
+                HashMap<String, String> authorMap = TestRunner.getAuthorMap();
+                String mapTable = MapUtils.getMapAsTableString(authorMap);
+                List<String> allFailedTests = JenkinsParser.getFailuresList(buildNr);
+                HashMap<String, String> fullClassName = TestRunner.getFullClassName();
 
-        String failureTestAuthorMapTable = MapUtils.getMapAsTableString(ListMapper.getAuthorMapForFailedTests(authorMap,failureList));
+                LinkedHashMap<String, String> failuresByAuthor = new LinkedHashMap<>();
 
-        response.setText("```" + "Unit Testing Test Author Map\n" +mapTable +"\nUnit Testing Failure Author Map\n"+ failureTestAuthorMapTable + " ```");
+                for (String test : allFailedTests) {
+                    failuresByAuthor.put(test, authorMap.get(test));
+                }
 
-        System.out.println(mapTable);
-        System.out.println(failureTestAuthorMapTable);
+                String failureTestAuthorMapTable = MapUtils.getMapAsTableString(failuresByAuthor);
 
-        return response;
+                String payload = "```Here are all the failured tests in build "+ buildNr+":\n" +failureTestAuthorMapTable+ " ```";
+
+                System.out.println(failureTestAuthorMapTable);
+
+                // Sending HTTP Post request with the processed payload to Slack channel
+                URL url = new URL(responseUrl);
+                HttpURLConnection http = (HttpURLConnection)url.openConnection();
+                http.setRequestMethod("POST");
+                http.setDoOutput(true);
+                http.setRequestProperty("Accept", "application/json");
+                http.setRequestProperty("Content-Type", "application/json");
+
+                String data = "{\n  \"status\":\"200\",\"mrkdwn\":\"true\",\"response_type\":\"in_channel\",\n  \"text\":\""+payload+" \"\n}";
+                System.out.println(data);
+
+                byte[] out = data.getBytes(StandardCharsets.UTF_8);
+
+                OutputStream stream = http.getOutputStream();
+                stream.write(out);
+
+                System.out.println(http.getResponseCode() + " " + http.getResponseMessage());
+                http.disconnect();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        });
+
+        thread.start();
+        return new SlackResponse().setText("Thanks for your request, we'll process it and get back to you.");
+
     }
 
     public static SlackResponse getFailuresByAuthor(String author) throws IOException, ClassNotFoundException {
@@ -55,7 +95,7 @@ public class RequestHandler {
         */
 
         List<String> testsByAuthor = MapUtils.getAllTestsOfAuthor(authorMap,author);
-        String listTable = MapUtils.getListAsTableString(testsByAuthor,fullClassName);
+        String listTable = MapUtils.getListAsTableString(testsByAuthor,fullClassName,0);
 
         String link = "<https://www.google.com|Google >\n";
         response.setResponseType("in_channel");
@@ -63,34 +103,85 @@ public class RequestHandler {
         return response;
     }
 
-    public static SlackResponse getTestAddedByAuthorInTimeframe(String text) throws IOException, ClassNotFoundException {
+    public static SlackResponse getTestAddedByAuthorInTimeframe(String responseUrl,String text) throws IOException, ClassNotFoundException {
         Set<String> allowedTimeFrames = Set.of("LastWeek","LastSevenDays","ThisWeek","ThisMonth");
-        SlackResponse response = new SlackResponse();
-        response.setResponseType("in_channel");
 
         String[] temp = text.split(" ");
-        if(temp.length!=2){
-            response.setResponseType("ephemeral");
-            response.setText("Invalid Command. \n there should be authorName and timeFrame after command.");
-            return response;
+        if(temp.length!=3){
+            return new SlackResponse()
+                    .setResponseType("ephemeral")
+                    .setText("Invalid Command. \n there should be Author name, TimeFrame and Build Number after the command.");
         }
         String author = temp[0];
         String timeFrame = temp[1];
+        int buildNr = Integer.parseInt(temp[2]);
 
         if(!allowedTimeFrames.contains(timeFrame)){
-            response.setResponseType("ephemeral");;
-            response.setText("Invalid TimeFrame.\nThese are allowed timeFrames: LastWeek, LastSevenDays,ThisWeek,ThisMonth.\n");
-            return response;
+            return new SlackResponse()
+                    .setResponseType("ephemeral")
+                    .setText("Invalid TimeFrame.\nThese are allowed timeFrames: LastWeek, LastSevenDays,ThisWeek,ThisMonth.\n");
         }
-        TestRunnerWithTimeFrame.timeFrameSetup(timeFrame);
-        HashMap<String,String> authorMap = TestRunnerWithTimeFrame.getAuthorMap();
-        HashMap<String,String> fullClassName = TestRunnerWithTimeFrame.getFullClassName();
 
-        List<String> testsByAuthor = MapUtils.getAllTestsOfAuthor(authorMap,author);
-        String embededListTable = MapUtils.getListAsTableString(testsByAuthor,fullClassName);
+        Thread thread = new Thread(()-> {
+            try{
+                TestRunnerWithTimeFrame.timeFrameSetup(timeFrame);
+                HashMap<String,String> authorMap = TestRunnerWithTimeFrame.getAuthorMap();
+                HashMap<String,String> fullClassName = TestRunnerWithTimeFrame.getFullClassName();
 
-        System.out.println(embededListTable);
-        response.setText("```Tests added by "+author+" in "+timeFrame +" : "+testsByAuthor.size()+"\nHere are all the tests: \n" + embededListTable+"\nHere are the failed tests:\n"+"```");
-        return response;
+                List<String> testsByAuthor = MapUtils.getAllTestsOfAuthor(authorMap,author);
+
+                List<String> allFailedTests = JenkinsParser.getFailuresList(buildNr);
+                List<String> failedTestsByAuthor = MapUtils.getAllFailedTestsByAuthor(testsByAuthor,allFailedTests,author);
+
+                String embeddedListTable = MapUtils.getListAsTableString(failedTestsByAuthor,fullClassName,buildNr);
+
+                System.out.println(embeddedListTable);
+
+                String payload = null;
+                if(allFailedTests.size()>0) {
+                    payload = "Tests added by " + author + " in " + timeFrame + " : " + testsByAuthor.size();
+                    payload += "\nHere are the failed tests: \n";
+                    payload += embeddedListTable;
+                    payload = "```" + payload + "```";
+                }
+                else payload="Jenkins File with build number "+buildNr+" is not accessible. ";
+
+
+                // Sending HTTP Post request with the processed payload to Slack channel
+                URL url = new URL(responseUrl);
+                HttpURLConnection http = (HttpURLConnection)url.openConnection();
+                http.setRequestMethod("POST");
+                http.setDoOutput(true);
+                http.setRequestProperty("Accept", "application/json");
+                http.setRequestProperty("Content-Type", "application/json");
+
+                String data = "{\n  \"status\":\"200\",\"response_type\":\"in_channel\",\n  \"text\":\""+payload+"\"\n}";
+                System.out.println(data);
+
+                byte[] out = data.getBytes(StandardCharsets.UTF_8);
+
+                OutputStream stream = http.getOutputStream();
+                stream.write(out);
+
+                System.out.println(http.getResponseCode() + " " + http.getResponseMessage());
+                http.disconnect();
+
+            } catch (ProtocolException e) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
+            } catch (MalformedURLException e) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
+            } catch (IOException | ClassNotFoundException e) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
+            }
+        });
+        thread.start();
+
+        return new SlackResponse()
+                .setResponseType("ephemeral")
+                .setText("Thanks for your request, we'll process it and get back to you.");
+
     }
 }

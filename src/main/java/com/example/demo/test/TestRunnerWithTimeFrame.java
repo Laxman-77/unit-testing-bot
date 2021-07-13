@@ -24,12 +24,14 @@ import java.util.HashMap;
         CalculatorTestSuite1.class,
         CalculatorTestSuite2.class
 })
-public class TestRunnerWithTimeFrame {
+public class TestRunnerWithTimeFrame extends TestRunner{
     private static final String TEST_DIR = "src/main/";
     private static final String FILE_PREFIX = TEST_DIR + "java/";
+
     private static HashMap<String, String> fullClassName = new HashMap<>();
 
-    public static long startTime, endTime;
+    private static long startTime, endTime;
+
     public static void timeFrameSetup(String timeFrame) {
         /**
          * Setting the startTime and endTime according to the given timeFrame

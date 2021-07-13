@@ -91,7 +91,14 @@ public class MapUtils {
         return list;
     }
 
-    public static String getListAsTableString(List<String> list,HashMap<String,String> fullClassName){
+    public static List<String> getAllFailedTestsByAuthor(List<String> allTestsByAuthor, List<String> allFailedTests, String author){
+        List<String> failuresByAuthor = new ArrayList<>();
+        for(String test:allTestsByAuthor){
+            if(allFailedTests.contains(test)) failuresByAuthor.add(test);
+        }
+        return failuresByAuthor;
+    }
+    public static String getListAsTableString(List<String> list,HashMap<String,String> fullClassName,int buildNr){
         int maxTestLength = 10;// Test Name
 
         for(String s:list) maxTestLength = Math.max(maxTestLength,s.length());
@@ -105,7 +112,7 @@ public class MapUtils {
         listTable.append(getPaddedListEntry("Test Name ",maxTestLength).toString()).append(NEWLINE_SEPARATOR);
         listTable.append(horizontal.toString()).append(NEWLINE_SEPARATOR);
         for(String item : list){
-            listTable.append(getEmbededPaddedListEntry(item,maxTestLength,fullClassName).toString()).append(NEWLINE_SEPARATOR);
+            listTable.append(getEmbededPaddedListEntry(item,maxTestLength,fullClassName,buildNr).toString()).append(NEWLINE_SEPARATOR);
         }
 
         listTable.append(horizontal.toString()).append(NEWLINE_SEPARATOR);
@@ -119,12 +126,14 @@ public class MapUtils {
         return entry;
     }
 
-    private static StringBuilder getEmbededPaddedListEntry(String item, Integer maxTestLength,HashMap<String,String> fullClassName){
+    private static StringBuilder getEmbededPaddedListEntry(String item, Integer maxTestLength,HashMap<String,String> fullClassName,int buildNr){
         StringBuilder entry = new StringBuilder();
         String[] tmp = item.split("[.]");
 
-        entry.append(VERTICAL_SEPARATOR).append(PADDING).append("<https://google.com/"+fullClassName.get(tmp[0])+"|").append(item).append(">").append(StringUtils.repeat(PADDING,maxTestLength - item.length()))
+        String JENKINS_URL = "<https://qa4-automation-jenkins-reports.sprinklr.com/CI_Test/builds/"+buildNr+"/htmlreports/Reports/classes/";
+        entry.append(VERTICAL_SEPARATOR).append(PADDING).append(JENKINS_URL + fullClassName.get(tmp[0])+".html|").append(item).append(">").append(StringUtils.repeat(PADDING,maxTestLength - item.length()))
                 .append(VERTICAL_SEPARATOR);
         return entry;
     }
+
 }

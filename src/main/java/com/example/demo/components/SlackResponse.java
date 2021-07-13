@@ -14,7 +14,7 @@ public class SlackResponse {
     private String text;
 
     @JsonProperty("response_type")
-    private String responseType;
+    private String responseType;    // default response_type in slack is "ephemeral"
 
     @JsonProperty("attachments")
     private List<Attachment> attachments;
@@ -31,24 +31,29 @@ public class SlackResponse {
         return attachments;
     }
 
-    public void setAttachments(List attachments) {
+    public SlackResponse setAttachments(List attachments) {
         this.attachments = attachments;
+        return this;
     }
 
     public String getText() {
         return text;
     }
 
-    public void setText(String text) {
+    public SlackResponse setText(String text) {
         this.text = text;
+        return this;
     }
 
     public String getResponseType() {
         return responseType;
     }
 
-    public void setResponseType(String responseType) {
+    public SlackResponse setResponseType(String responseType) {
         this.responseType = responseType;
+        return this;
     }
+
+
 
 }
