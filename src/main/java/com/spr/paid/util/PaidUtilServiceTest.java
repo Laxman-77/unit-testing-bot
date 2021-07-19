@@ -19,19 +19,5 @@ public class PaidUtilServiceTest {
 
     }
 
-    @Test
-    public void testTrafficCTA(){
-
-    }
-
-    @Test
-    public void testUpdateIsSponsoredForSecondaryOrganicPosts(){
-
-    }
-
-    @Test
-    public void testVideoViewsCTA(){
-
-    }
 
 }

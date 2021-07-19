@@ -20,49 +20,6 @@ public class FBPlacementBuilderPostEngagementTest {
 
     }
 
-    @Test
-    public void testPlacementTreeForMobileDeviceForCanvasFormat(){
 
-    }
-
-    @Test
-    public void testPlacementTreeForRFBothDevice(){
-
-    }
-
-    @Test
-    public void testPlacementTreeForRFBothDeviceForCanvasFormat(){
-
-    }
-
-    @Test
-    public void testPlacementTreeForRFBothDeviceForVideoFormat(){
-
-    }
-
-    @Test
-    public void testPlacementTreeForRFDesktopDevice(){
-
-    }
-
-    @Test
-    public void testPlacementTreeForRFDesktopDeviceForVideoFormat(){
-
-    }
-
-    @Test
-    public void testPlacementTreeForRFMobileDevice(){
-
-    }
-
-    @Test
-    public void testPlacementTreeForRFMobileDeviceFor360PhotoFormat(){
-
-    }
-
-    @Test
-    public void testPlacementTreeForRFMobileDeviceForVideoFormat(){
-
-    }
 
 }

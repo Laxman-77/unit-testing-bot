@@ -104,6 +104,7 @@ public class MapUtils {
         for(String s:list) maxTestLength = Math.max(maxTestLength,s.length());
 
         maxTestLength+=2;
+        System.out.println(" maxTestLength : "+ maxTestLength);
         StringBuilder listTable = new StringBuilder();
         StringBuilder horizontal = new StringBuilder();
         horizontal.append(INTERSECTION_CHAR).append(StringUtils.repeat(HORIZONTAL_SEPARATOR,maxTestLength+1)).append(INTERSECTION_CHAR);

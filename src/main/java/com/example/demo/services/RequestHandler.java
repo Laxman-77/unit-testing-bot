@@ -33,9 +33,13 @@ public class RequestHandler {
 
                 LinkedHashMap<String, String> failuresByAuthor = new LinkedHashMap<>();
 
+                int cnt=0;
                 for (String test : allFailedTests) {
                     failuresByAuthor.put(test, authorMap.get(test));
+                    cnt++;
+                    if(cnt>10) break;
                 }
+
 
                 String failureTestAuthorMapTable = MapUtils.getMapAsTableString(failuresByAuthor);
 
@@ -115,7 +119,7 @@ public class RequestHandler {
                     payload = "Tests added by " + author + " in " + timeFrame + " : " + testsByAuthor.size();
                     payload += "\nHere are the failed tests: \n";
                     payload += embeddedListTable;
-                    payload = "```" + payload + "```";
+                    payload = "```" + payload + " ```";
                 }
                 else payload="Jenkins File with build number "+buildNr+" is not accessible. ";
 
