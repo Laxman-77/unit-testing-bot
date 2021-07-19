@@ -43,6 +43,7 @@ public class RequestHandler {
 
                 System.out.println(failureTestAuthorMapTable);
 
+                
                 // Sending HTTP Post request with the processed payload to Slack channel
                 URL url = new URL(responseUrl);
                 HttpURLConnection http = (HttpURLConnection)url.openConnection();
@@ -74,35 +75,6 @@ public class RequestHandler {
 
     }
 
-    public static SlackResponse getFailuresByAuthor(String author) throws IOException, ClassNotFoundException {
-        SlackResponse response = new SlackResponse();
-
-        if(author.length()==0){
-            response.setResponseType("ephemeral");
-            response.setText("Invalid Command! \nYou haven't passed the author name after the command.\nExample command: /get_failures_by_author laxman.goliya \n");
-            return response;
-        }
-
-        HashMap<String,String> authorMap = TestRunner.getAuthorMap();
-        HashMap<String,String> fullClassName = TestRunner.getFullClassName();
-        //String mapTable = MapUtils.getMapAsTableString(authorMap);
-
-        /*
-        ArrayList<String> failureList = new ArrayList<>(); // jenkins report list
-        failureList.add("CalculatorTest1. addTest2");
-        failureList.add("CalculatorTest2. subtractTest1");
-        failureList.add("CalculatorTest2. addTest");
-        */
-
-        List<String> testsByAuthor = MapUtils.getAllTestsOfAuthor(authorMap,author);
-        String listTable = MapUtils.getListAsTableString(testsByAuthor,fullClassName,0);
-
-        String link = "<https://www.google.com|Google >\n";
-        response.setResponseType("in_channel");
-        response.setText("```"+"Here are your tests!\n"+link+listTable+"```");
-        return response;
-    }
-
     public static SlackResponse getTestAddedByAuthorInTimeframe(String responseUrl,String text) throws IOException, ClassNotFoundException {
         Set<String> allowedTimeFrames = Set.of("LastWeek","LastSevenDays","ThisWeek","ThisMonth");
 
@@ -114,6 +86,7 @@ public class RequestHandler {
         }
         String author = temp[0];
         String timeFrame = temp[1];
+        System.out.println(temp[0] + " : " + temp[1] + " : " + temp[2]);
         int buildNr = Integer.parseInt(temp[2]);
 
         if(!allowedTimeFrames.contains(timeFrame)){
@@ -177,6 +150,7 @@ public class RequestHandler {
                 e.printStackTrace();
             }
         });
+        System.out.println("Thread Starting");
         thread.start();
 
         return new SlackResponse()

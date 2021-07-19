@@ -29,6 +29,9 @@ dependencies {
     // jsoup repo
     implementation 'org.jsoup:jsoup:1.13.1'
 
+    // https://mvnrepository.com/artifact/org.apache.poi/poi
+    implementation group: 'org.apache.poi', name: 'poi', version: '5.0.0'
+
 }
 
 test {
