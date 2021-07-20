@@ -1,5 +1,14 @@
 package com.example.demo.test;
 
+import com.spr.MongoPersistentPropertyCacheTest;
+import com.spr.adchannels.facebook.adapters.dynamiccreative.DynamicCreativeDisjointTypeAdapterTest;
+import com.spr.audience.MongoIndicesReportServiceTest;
+import com.spr.audience.SalesforceReachTest;
+import com.spr.audience.UIActivatedAudienceDecorationTest;
+import com.spr.core.modelvalidation.ModelValidationFilterServiceTest;
+import com.spr.core.modelvalidation.ModelValidationServiceTest;
+import com.spr.core.modelvalidation.TextClassifierModelTest;
+import com.spr.modules.advocacy.user.AdvocacyCommunityUserMangagementServiceTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
