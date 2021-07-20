@@ -33,4 +33,15 @@ public class CalculatorTest2 {
     public void subtractTest2(){
         Assertions.assertEquals(13,calc.subtract(100,87));
     }
+
+    @Test
+    public void subtractTest3(){
+        Assertions.assertEquals(13,calc.subtract(100,87));
+    }
+
+    @Test
+    public void addTest3(){
+        Assertions.assertEquals(13,calc.add(100,87));
+    }
+
 }

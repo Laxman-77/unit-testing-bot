@@ -15,9 +15,9 @@ public class MapUtils {
     private static final String NEWLINE_SEPARATOR = "\n";
     private static final String INTERSECTION_CHAR = "+";
 
-    public static List<String> getMapAsList(HashMap<String,String> authorMap){
-        int maxAuthorNameLength = 11; // " Test Name " = 11
-        int maxTestNameLength = 13; // " Author Name " = 13
+    public static List<String> getMapAsList(HashMap<String,String> authorMap,String[] headings){
+        int maxAuthorNameLength = headings[0].length(); // " Test Name " = 11
+        int maxTestNameLength = headings[1].length(); // " Author Name " = 13
 
         for(Map.Entry entry : authorMap.entrySet()){
             if(entry.getValue() == null) entry.setValue("No Author Found ");
@@ -42,7 +42,7 @@ public class MapUtils {
                 append(INTERSECTION_CHAR).append(StringUtils.repeat(HORIZONTAL_SEPARATOR,maxAuthorNameLength+1)).append(INTERSECTION_CHAR);
         //System.out.println(horizontal);
 
-        String[] headings = {"Test Name", "Author Name"};
+        //String[] headings = {"Test Name", "Author Name"};
         StringBuilder headers = getPaddedEntry(headings,maxTestNameLength,maxAuthorNameLength);
 
         List<String> mapTable = new ArrayList<>();
@@ -62,9 +62,9 @@ public class MapUtils {
         return mapTable;
     }
 
-    public static String getMapAsTableString(HashMap<String,String> myMap){
+    public static String getMapAsTableString(HashMap<String,String> myMap,String[] headings){
         // converting authorMap to string in table format
-        List<String> list = getMapAsList(myMap);
+        List<String> list = getMapAsList(myMap,headings);
         StringBuilder table = new StringBuilder();
         for( String entry: list){
             table.append(entry).append(NEWLINE_SEPARATOR);

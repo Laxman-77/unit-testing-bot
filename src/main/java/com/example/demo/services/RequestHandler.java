@@ -27,7 +27,8 @@ public class RequestHandler {
         Thread thread = new Thread(()-> {
             try {
                 HashMap<String, String> authorMap = TestRunner.getAuthorMap();
-                String mapTable = MapUtils.getMapAsTableString(authorMap);
+                String[] headings = {"Test Name","Author Name"};
+                String mapTable = MapUtils.getMapAsTableString(authorMap,headings);
                 List<String> allFailedTests = JenkinsParser.getFailuresList(buildNr);
                 HashMap<String, String> fullClassName = TestRunner.getFullClassName();
 
@@ -41,13 +42,77 @@ public class RequestHandler {
                 }
 
 
-                String failureTestAuthorMapTable = MapUtils.getMapAsTableString(failuresByAuthor);
+                String failureTestAuthorMapTable = MapUtils.getMapAsTableString(failuresByAuthor,headings);
 
                 String payload = "```Here are all the failured tests in build "+ buildNr+":\n" +failureTestAuthorMapTable+ " ```";
 
                 System.out.println(failureTestAuthorMapTable);
 
                 
+                // Sending HTTP Post request with the processed payload to Slack channel
+                URL url = new URL(responseUrl);
+                HttpURLConnection http = (HttpURLConnection)url.openConnection();
+                http.setRequestMethod("POST");
+                http.setDoOutput(true);
+                http.setRequestProperty("Accept", "application/json");
+                http.setRequestProperty("Content-Type", "application/json");
+
+                String data = "{\n  \"status\":\"200\",\"mrkdwn\":\"true\",\"response_type\":\"in_channel\",\n  \"text\":\""+payload+" \"\n}";
+                System.out.println(data);
+
+                byte[] out = data.getBytes(StandardCharsets.UTF_8);
+
+                OutputStream stream = http.getOutputStream();
+                stream.write(out);
+
+                System.out.println(http.getResponseCode() + " " + http.getResponseMessage());
+                http.disconnect();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        });
+
+        thread.start();
+        return new SlackResponse().setText("Thanks for your request, we'll process it and get back to you.");
+
+    }
+
+    public static SlackResponse getTestCount(String responseUrl) throws IOException, ClassNotFoundException {
+
+        Thread thread = new Thread(()-> {
+            try {
+                HashMap<String, String> authorMap = TestRunner.getAuthorMap();
+
+                HashMap<String,Integer> counts = new HashMap<>();
+                for(Map.Entry entry:authorMap.entrySet()){
+                    int prev = 0;
+                    if(counts.get(entry.getValue().toString()) != null){
+                        prev = counts.get(entry.getValue().toString());
+                    };
+                    counts.put(entry.getValue().toString(),prev+1);
+                }
+                String[] headings = {"Author Name","Test Count"};
+
+                System.out.println(MapUtils.getMapAsTableString(authorMap,headings));
+                HashMap<String,String> testCount = new HashMap<>();
+                for(Map.Entry entry : counts.entrySet()){
+                    testCount.put(entry.getKey().toString(),entry.getValue().toString());
+                }
+
+                String mapTable = MapUtils.getMapAsTableString(testCount,headings);
+
+                String payload = "Test added by authors: \n";
+                payload += mapTable ;
+                payload = "```" + payload + "```";
+                System.out.println(payload);
+                //String payload = "```Here are all the failured tests in build "+ buildNr+":\n" +failureTestAuthorMapTable+ " ```";
+
+                //System.out.println(failureTestAuthorMapTable);
+
+
                 // Sending HTTP Post request with the processed payload to Slack channel
                 URL url = new URL(responseUrl);
                 HttpURLConnection http = (HttpURLConnection)url.openConnection();
