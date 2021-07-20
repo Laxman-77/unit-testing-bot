@@ -39,6 +39,7 @@ public class TestRunnerWithTimeFrame extends TestRunner{
          * ThisWeek : This Monday to Now
          * LastSevenDays : 7 Days before today to Today
          * ThisMonth : First Day of Month to Now
+         * LifeTime : Till Now
          */
 
         switch (timeFrame) {
@@ -73,6 +74,10 @@ public class TestRunnerWithTimeFrame extends TestRunner{
 
                 endTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
                 break;
+            }
+            case "LifeTime":{
+                startTime = 0;
+                endTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
             }
 
             default:
