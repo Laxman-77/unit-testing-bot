@@ -1,4 +1,4 @@
-package com.spr.core.modelvalidation.TextClassifierModelTest;
+package com.spr.core.modelvalidation;
 
 import org.junit.Test;
 
