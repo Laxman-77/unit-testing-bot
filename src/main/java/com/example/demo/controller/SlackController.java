@@ -192,14 +192,14 @@ public class SlackController {
         if(!ALLOWED_CHANNELS.contains(channelName)) return new SlackResponse("This channel is not authorized to use this bot.");
         try {
             SlackResponse response = new SlackResponse(
-                    " ```     * All commands:\n" +
-                            "     * 1. /get_all_failures <build-no> : Get all failures in the given build With their authors\n" +
-                            "     * 2. /get_test_count <time-frame> : Get map of author-test_counts added in given time-frame\n" +
-                            "     * 3. /get_tests_added_by_author <author> <time-frame> : Get count of new tests added by author\n" +
-                            "     * 4. /get_tests_failed_by_author <author> <time-frame> <build-no> : Get failed tests written by author in given timeframe\n" +
-                            "     * 5. /help : Get list of commands\n" +
-                            "     *\n" +
-                            "     *   Supported Time Frames : ThisWeek , LastWeek , LastSevenDays , ThisMonth , LifeTime ```");
+                    " ```      All commands:\n" +
+                            "      1. /get_all_failures <build-no> : Get all failures in the given build With their authors\n" +
+                            "      2. /get_test_count <time-frame> : Get map of author-test_counts added in given time-frame\n" +
+                            "      3. /get_tests_added_by_author <author> <time-frame> : Get count of new tests added by author\n" +
+                            "      4. /get_tests_failed_by_author <author> <time-frame> <build-no> : Get failed tests written by author in given timeframe\n" +
+                            "      5. /help : Get list of commands\n" +
+                            "     \n" +
+                            "        Supported Time Frames : ThisWeek , LastWeek , LastSevenDays , ThisMonth , LifeTime ```");
             System.out.println(response.getText());
             return response;
         }
