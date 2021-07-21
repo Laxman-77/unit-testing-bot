@@ -12,6 +12,19 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.util.Set;
 
+
+
+/**
+ * All commands:
+ * 1. /get_all_failures <build-no> : Get all failures in the given build With their authors
+ * 2. /get_test_count <time-frame> : Get map of author-test_counts added in given time-frame
+ * 3. /get_tests_added_by_author <author> <time-frame> : Get count of new tests added by author
+ * 4. /get_tests_failed_by_author <author> <time-frame> <build-no> : Get failed tests written by author in given timeframe
+ * 5. /help : Get list of commands
+ *
+ *   Supported Time Frames : ThisWeek , LastWeek , LastSevenDays , ThisMonth , LifeTime
+ */
+
 @RestController
 public class SlackController {
     private static final Set<String> ALLOWED_CHANNELS = Set.of("unit-test-bot","paid-backend","random");
@@ -210,16 +223,6 @@ public class SlackController {
 
     }
 
-    /**
-     * All commands:
-     * 1. /get_all_failures <build-no> : Get all failures in the given build With their authors
-     * 2. /get_test_count <time-frame> : Get map of author-test_counts added in given time-frame
-     * 3. /get_tests_added_by_author <author> <time-frame> : Get count of new tests added by author
-     * 4. /get_tests_failed_by_author <author> <time-frame> <build-no> : Get failed tests written by author in given timeframe
-     * 5. /help : Get list of commands
-     *
-     *   Supported Time Frames : ThisWeek , LastWeek , LastSevenDays , ThisMonth , LifeTime
-     */
 
     @RequestMapping("/")
     public SlackResponse home(){
